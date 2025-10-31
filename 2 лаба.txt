@@ -1,0 +1,114 @@
+from collections import deque
+import networkx as nx
+import random
+import matplotlib.pyplot as plt
+
+# Параметры графа
+num_vertices = 15
+num_components = 5
+density_within = 0.5
+density_between = 0.1
+
+# Создание графа
+G = nx.Graph()
+G.add_nodes_from(range(num_vertices))
+
+# Создание связей внутри компонент
+for component in range(num_components):
+    start = component * (num_vertices // num_components)
+    end = (component + 1) * (num_vertices // num_components)
+    for i in range(start, end):
+        for j in range(i + 1, end):
+            if random.random() < density_within:
+                G.add_edge(i, j)
+
+# Создание связей между компонентами
+for component1 in range(num_components):
+    start1 = component1 * (num_vertices // num_components)
+    end1 = (component1 + 1) * (num_vertices // num_components)
+    for component2 in range(component1 + 1, num_components):
+        start2 = component2 * (num_vertices // num_components)
+        end2 = (component2 + 1) * (num_vertices // num_components)
+        for i in range(start1, end1):
+            for j in range(start2, end2):
+                if random.random() < density_between:
+                    G.add_edge(i, j)
+
+
+def bfs(graph, start):
+    """Обход графа в ширину, начиная с заданной вершины"""
+    visited = set()
+    queue = deque([(start, [start])])
+
+    while queue:
+        vertex, path = queue.popleft()
+        if vertex not in visited:
+            visited.add(vertex)
+            yield path
+            for neighbor in graph[vertex]:
+                queue.append((neighbor, path + [neighbor]))
+
+
+def dfs(graph, start):
+    """Обход графа в глубину, начиная с заданной вершины"""
+    visited = set()
+    stack = [(start, [start])]
+
+    while stack:
+        vertex, path = stack.pop()
+        if vertex not in visited:
+            visited.add(vertex)
+            yield path
+            for neighbor in list(graph[vertex])[::-1]:
+                stack.append((neighbor, path + [neighbor]))
+
+def shortest_path(graph, start, end):
+    """Находит кратчайший путь между двумя вершинами графа"""
+    for path in bfs(graph, start):
+        if path[-1] == end:
+            return path
+    return None
+
+def lexicographic_path(graph, start, end):
+    """Находит лексикографически первый путь между двумя вершинами графа"""
+    for path in dfs(graph, start):
+        if path[-1] == end:
+            return path
+    return None
+
+
+def connected_components(graph):
+    """Находит компоненты связности графа"""
+    visited = set()
+    components = []
+
+    for vertex in graph:
+        if vertex not in visited:
+            component = list(dfs(graph, vertex))
+            components.append(component)
+            visited.update(component[-1])
+
+    return components
+
+components = connected_components(G)
+print("\nКомпоненты связности:")
+for idx, component in enumerate(components, 1):
+    print(f"Компонента {idx}: {component}")
+
+# Отображение графа
+plt.figure(figsize=(12, 8))
+pos = nx.spring_layout(G)  # Позиционирование вершин
+nx.draw(G, pos, with_labels=True, node_size=100, node_color='skyblue', font_size=8, font_color='black')
+
+# Поиск лексикографически первого пути
+start_node = 0
+end_node = 4
+lexicographic_path = lexicographic_path(G, start_node, end_node)
+print(f"Лексикографический путь: {lexicographic_path}")
+
+# Поиск кратчайшего пути
+shortest_path = shortest_path(G, start_node, end_node)
+print(f"Кратчайший маршрут: {shortest_path}")
+
+plt.title('Пример графа для проверки алгоритмов')
+plt.show()

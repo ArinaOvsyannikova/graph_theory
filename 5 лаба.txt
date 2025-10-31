@@ -1,0 +1,35 @@
+import time
+start_time = time.time()  # Засекаем начало выполнения алгоритма
+def ford_bellman(graph, source):
+    distance = {vertex: float('inf') for vertex in graph}
+    distance[source] = 0
+
+    for _ in range(len(graph) - 1):
+        for vertex in graph:
+            for neighbor, weight in graph[vertex].items():
+                distance[neighbor] = min(distance[neighbor], distance[vertex] + weight)
+
+    for vertex in graph:
+        for neighbor, weight in graph[vertex].items():
+            if distance[neighbor] > distance[vertex] + weight:
+                return "Negative-weight cycle detected"
+
+    return distance
+
+graph = {
+    'A': {'B': 1, 'C': 4},
+    'B': {'A': 1, 'C': 2, 'D': 5},
+    'C': {'A': 4, 'B': 2, 'D': 1},
+    'D': {'B': 5, 'C': 1},
+    'E': {'F': 2, 'G': 8},
+    'F': {'E': 2, 'G': 3},
+    'G': {'E': 8, 'F': 3}
+}
+
+print(ford_bellman(graph, 'A'))
+
+# Оценка скорости работы алгоритма
+
+end_time = time.time()  # Засекаем конец выполнения алгоритма
+execution_time = end_time - start_time  # Вычисляем время выполнения
+print("Время выполнения алгоритма: {:.6f} секунд".format(execution_time))
